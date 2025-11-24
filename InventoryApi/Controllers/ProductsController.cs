@@ -1,0 +1,66 @@
+using Microsoft.AspNetCore.Mvc;
+using InventoryApi.Models;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace InventoryAPI.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ProductsController : ControllerBase
+    {
+        private static List<Product> products = new List<Product>
+        {
+            new Product { Id = 1, Name = "Laptop", Price = 1200.50m, Stock = 10 },
+            new Product { Id = 2, Name = "Mouse", Price = 25.00m, Stock = 50 }
+        };
+
+        [HttpGet]
+        public ActionResult<IEnumerable<Product>> GetProducts()
+        {
+            return Ok(products);
+        }
+
+        [HttpPost]
+        public ActionResult<Product> CreateProduct(Product newProduct)
+        {
+            if (newProduct.Price < 0)
+            {
+                return BadRequest("El precio no puede ser negativo.");
+            }
+
+            newProduct.Id = products.Count > 0 ? products.Max(p => p.Id) + 1 : 1;
+
+            products.Add(newProduct);
+            return CreatedAtAction(nameof(GetProducts), new { id = newProduct.Id }, newProduct);
+        }
+        [HttpPut("{id}")]
+        public IActionResult UpdateProduct(int id, Product updatedProduct)
+        {
+            var existingProduct = products.FirstOrDefault(p => p.Id == id);
+            if (existingProduct == null)
+            {
+                return NotFound(); 
+            }
+
+            existingProduct.Name = updatedProduct.Name;
+            existingProduct.Price = updatedProduct.Price;
+            existingProduct.Stock = updatedProduct.Stock;
+
+            return NoContent(); 
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult DeleteProduct(int id)
+        {
+            var product = products.FirstOrDefault(p => p.Id == id);
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            products.Remove(product);
+            return NoContent();
+        }
+    }
+}
